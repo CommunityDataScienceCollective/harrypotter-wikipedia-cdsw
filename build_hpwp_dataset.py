@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import json
 import requests
-
-import codecs
 
 # get_article_revisions is a function that takes an article title in
 # wikipedia and return a list of all the revisions and meatadata for
@@ -13,15 +10,23 @@ def get_article_revisions(title):
     revisions = []
 
     # create a base url for the api and then a normal url which is initially just a copy of it
-    wp_api_base = "http://en.wikipedia.org/w/api.php/?action=query&titles=%(article_title)s&prop=revisions&rvprop=flags|timestamp|user|size|ids&rvlimit=500&format=json"
-    wp_api_base = wp_api_base % {'article_title': title }
-    wp_api_url = wp_api_base
+    # http://en.wikipedia.org/w/api.php/?action=query&titles=%(article_title)s&prop=revisions&rvprop=flags|timestamp|user|size|ids&rvlimit=500&format=json
+    wp_api_url = "http://en.wikipedia.org/w/api.php/"
 
-    # we'll repeat this forever (i.e., we'll only stop when we find the "break" command)
+    parameters = {'action' : 'query',
+                  'titles' : title,
+                  'prop' : 'revisions',
+                  'rvprop' : 'flags|timestamp|user|size|ids',
+                  'rvlimit' : 500,
+                  'format' : 'json',
+                  'continue' : '' }
+
+    # we'll repeat this forever (i.e., we'll only stop when we find
+    # the "break" command)
     while True:
         # the first line open the urls but also handles unicode urls
-        call = requests.get(wp_api_url)
-        api_answer = json.loads(call.content)
+        call = requests.get(wp_api_url, params=parameters)
+        api_answer = call.json()
 
         # get the list of pages from the json object
         pages = api_answer["query"]["pages"]
@@ -33,20 +38,20 @@ def get_article_revisions(title):
             # for every revision, we do first do cleaning up
             for rev in query_revisions:
                 # lets continue/skip if the user is hidden
-                if rev.has_key("userhidden"):
+                if "userhidden" in rev:
                     continue
                 
                 # 1: add a title field for the article because we're going to mix them together
                 rev["title"] = title
 
                 # 2: lets "recode" anon so it's true or false instead of present/missing
-                if rev.has_key("anon"):
+                if "anon" in rev:
                     rev["anon"] = True
                 else:
                     rev["anon"] = False
 
                 # 3: letst recode "minor" in the same way
-                if rev.has_key("minor"):
+                if "minor" in rev:
                     rev["minor"] = True
                 else:
                     rev["minor"] = False
@@ -58,31 +63,34 @@ def get_article_revisions(title):
                 # finally save the revisions we've seen to a varaible
                 revisions.append(rev)
 
-        # if there is a query-continue, it means there are more
-        if 'query-continue' in api_answer.keys():
-            # we will grab the rvcontinue token, insert it, and head back to the start of the loop
-            rvcontinue = api_answer["query-continue"]["revisions"]["rvcontinue"]
-            wp_api_url = wp_api_base + "&rvcontinue=%(continue_from)s" % {'continue_from' : rvcontinue}
+        if 'continue' in api_answer:
+            parameters.update(api_answer['continue'])
         else:
-            # no continue means we're done
             break
 
     # return all the revisions for this page
     return(revisions)
 
-category = "Harry_Potter"
+category = "Harry Potter"
 
 # we'll use another api called catscan2 to grab a list of pages in
 # categories and subcategories. it works like all the other apis we've
 # studied!
-url_catscan = 'http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories=%(category)s&doit=1&format=json'
-url_catscan = url_catscan % {'category' : category}
-call = requests.get(url_catscan)
-articles = json.loads(call.content)
-articles = articles["*"][0]["a"]["*"]
+#
+# http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories=%s&doit=1&format=json
+url_catscan = "http://tools.wmflabs.org/catscan2/catscan2.php"
+
+parameters = {'depth' : 10,
+              'categories' : category,
+              'format' : 'json',
+              'doit' : 1}
+
+r = requests.get(url_catscan, params=parameters)
+articles_json = r.json()
+articles = articles_json["*"][0]["a"]["*"]
 
 # open a filie to write all the output
-output = codecs.open("hp_wiki.csv", "wb", "utf-8")
+output = open("hp_wiki.csv", "w")
 output.write(",".join(["title", "user", "timestamp", "size", "anon", "minor", "revid"]) + "\n")
 
 # for every article
