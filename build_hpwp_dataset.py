@@ -90,8 +90,8 @@ articles_json = r.json()
 articles = articles_json["*"][0]["a"]["*"]
 
 # open a filie to write all the output
-output = open("hp_wiki.csv", "w")
-output.write(",".join(["title", "user", "timestamp", "size", "anon", "minor", "revid"]) + "\n")
+output = open("hp_wiki.tsv", "w", encoding="utf-8")
+output.write("\t".join(["title", "user", "timestamp", "size", "anon", "minor", "revid"]) + "\n")
 
 # for every article
 for article in articles:
@@ -102,7 +102,7 @@ for article in articles:
     # get the list of revisions from our function and then interating through it printinig it out
     revisions = get_article_revisions(title)
     for rev in revisions:
-        output.write(",".join(['"' + rev["title"] + '"', '"' + rev["user"] + '"',
+        output.write("\t".join(['"' + rev["title"] + '"', '"' + rev["user"] + '"',
                                rev["timestamp"], str(rev["size"]), str(rev["anon"]),
                                str(rev["minor"]), str(rev["revid"])]) + "\n")
 
