@@ -11,6 +11,6 @@ for row in DictReader(input_file, delimiter="\t"):
 
 prop_anon = num_anon / num_edits
 
-print("total edits: %s" % num_edits)
-print("anon edits: %s" % num_anon)
-print("proportion anon: %s" % prop_anon)
+print("total edits: {0}".format(num_edits))
+print("anon edits: {0}".format(num_anon))
+print("proportion anon: {0}".format(prop_anon))

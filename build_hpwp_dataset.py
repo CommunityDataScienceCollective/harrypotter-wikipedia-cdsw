@@ -4,13 +4,15 @@
 import requests
 
 # get_article_revisions is a function that takes an article title in
-# wikipedia and return a list of all the revisions and meatadata for
+# wikipedia and return a list of all the revisions and metadata for
 # that article
 def get_article_revisions(title):
     revisions = []
 
-    # create a base url for the api and then a normal url which is initially just a copy of it
-    # http://en.wikipedia.org/w/api.php/?action=query&titles=%(article_title)s&prop=revisions&rvprop=flags|timestamp|user|size|ids&rvlimit=500&format=json
+    # create a base url for the api and then a normal url which is initially
+    # just a copy of it
+    # The following line is what the requests call is doing, basically.
+    # "http://en.wikipedia.org/w/api.php/?action=query&titles={0}&prop=revisions&rvprop=flags|timestamp|user|size|ids&rvlimit=500&format=json".format(title)
     wp_api_url = "http://en.wikipedia.org/w/api.php/"
 
     parameters = {'action' : 'query',
@@ -31,39 +33,42 @@ def get_article_revisions(title):
         # get the list of pages from the json object
         pages = api_answer["query"]["pages"]
 
-        # for every pages (there should always be only one) get the revisions
+        # for every page, (there should always be only one) get its revisions:
         for page in pages.keys():
             query_revisions = pages[page]["revisions"]
 
-            # for every revision, we do first do cleaning up
+            # for every revision, first we do some cleaning up
             for rev in query_revisions:
-                # lets continue/skip if the user is hidden
+                # let's continue/skip this revision if the user is hidden
                 if "userhidden" in rev:
                     continue
                 
                 # 1: add a title field for the article because we're going to mix them together
                 rev["title"] = title
 
-                # 2: lets "recode" anon so it's true or false instead of present/missing
+                # 2: let's "recode" anon so it's true or false instead of present/missing
                 if "anon" in rev:
                     rev["anon"] = True
                 else:
                     rev["anon"] = False
 
-                # 3: letst recode "minor" in the same way
+                # 3: let's recode "minor" in the same way
                 if "minor" in rev:
                     rev["minor"] = True
                 else:
                     rev["minor"] = False
 
-                # we're going to change the timestamp to make it work a little better in excel and similar
+                # we're going to change the timestamp to make it work a little better in excel/spreadsheets
                 rev["timestamp"] = rev["timestamp"].replace("T", " ")
                 rev["timestamp"] = rev["timestamp"].replace("Z", "")
 
-                # finally save the revisions we've seen to a varaible
+                # finally, save the revisions we've seen to a varaible
                 revisions.append(rev)
 
+        # 'continue' tells us there's more revisions to add
         if 'continue' in api_answer:
+            # replace the 'continue' parameter with the contents of the
+            # api_answer dictionary.
             parameters.update(api_answer['continue'])
         else:
             break
@@ -77,7 +82,8 @@ category = "Harry Potter"
 # categories and subcategories. it works like all the other apis we've
 # studied!
 #
-# http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories=%s&doit=1&format=json
+# The following requests call basically does the same thing as this string:
+# "http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories={0}&doit=1&format=json".format(category)
 url_catscan = "http://tools.wmflabs.org/catscan2/catscan2.php"
 
 parameters = {'depth' : 10,
@@ -89,17 +95,18 @@ r = requests.get(url_catscan, params=parameters)
 articles_json = r.json()
 articles = articles_json["*"][0]["a"]["*"]
 
-# open a filie to write all the output
+# open a file to write all the output
 output = open("hp_wiki.tsv", "w", encoding="utf-8")
 output.write("\t".join(["title", "user", "timestamp", "size", "anon", "minor", "revid"]) + "\n")
 
 # for every article
 for article in articles:
 
-    # first grab tht title
+    # first grab the article's title
     title = article["a"]["title"]
 
-    # get the list of revisions from our function and then interating through it printinig it out
+    # get the list of revisions from our function and then iterate through it,
+    # printing it to our output file
     revisions = get_article_revisions(title)
     for rev in revisions:
         output.write("\t".join(['"' + rev["title"] + '"', '"' + rev["user"] + '"',
