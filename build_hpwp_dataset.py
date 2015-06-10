@@ -12,7 +12,7 @@ def get_article_revisions(title):
     # create a base url for the api and then a normal url which is initially
     # just a copy of it
     # The following line is what the requests call is doing, basically.
-    # "http://en.wikipedia.org/w/api.php/?action=query&titles={0}&prop=revisions&rvprop=flags|timestamp|user|size|ids&rvlimit=500&format=json".format(title)
+    # "http://en.wikipedia.org/w/api.php/?action=query&titles={0}&prop=revisions&rvprop=flags|timestamp|user|size|ids&rvlimit=500&format=json&continue=".format(title)
     wp_api_url = "http://en.wikipedia.org/w/api.php/"
 
     parameters = {'action' : 'query',
@@ -39,6 +39,7 @@ def get_article_revisions(title):
 
             # for every revision, first we do some cleaning up
             for rev in query_revisions:
+                #print(rev)
                 # let's continue/skip this revision if the user is hidden
                 if "userhidden" in rev:
                     continue
@@ -90,6 +91,8 @@ parameters = {'depth' : 10,
               'categories' : category,
               'format' : 'json',
               'doit' : 1}
+
+# r = requests.get("http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories=Harry Potter&doit=1&format=json"
 
 r = requests.get(url_catscan, params=parameters)
 articles_json = r.json()
