@@ -85,7 +85,7 @@ category = "Harry Potter"
 #
 # The following requests call basically does the same thing as this string:
 # "http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories={0}&doit=1&format=json".format(category)
-url_catscan = "http://tools.wmflabs.org/catscan2/catscan2.php"
+url_catscan = "http://tools.wmflabs.org/catscan3/catscan2.php"
 
 parameters = {'depth' : 10,
               'categories' : category,
@@ -96,7 +96,7 @@ parameters = {'depth' : 10,
 
 r = requests.get(url_catscan, params=parameters)
 articles_json = r.json()
-articles = articles_json["*"][0]["a"]["*"]
+articles = articles_json["*"][0]["*"]
 
 # open a file to write all the output
 output = open("hp_wiki.tsv", "w", encoding="utf-8")
