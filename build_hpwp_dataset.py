@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import encoding_fix
 import requests
 
 # get_article_revisions is a function that takes an article title in
@@ -107,6 +108,7 @@ for article in articles:
 
     # first grab the article's title
     title = article["a"]["title"]
+    print(title)
 
     # get the list of revisions from our function and then iterate through it,
     # printing it to our output file

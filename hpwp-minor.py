@@ -1,3 +1,5 @@
+import encoding_fix
+
 from csv import DictReader
 
 input_file = open("hp_wiki.tsv", 'r', encoding="utf-8")

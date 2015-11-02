@@ -1,3 +1,5 @@
+import encoding_fix
+
 from csv import DictReader
 
 # read in the input file and count by day
