@@ -86,7 +86,7 @@ category = "Harry Potter"
 #
 # The following requests call basically does the same thing as this string:
 # "http://tools.wmflabs.org/catscan2/catscan2.php?depth=10&categories={0}&doit=1&format=json".format(category)
-url_catscan = "http://tools.wmflabs.org/catscan3/catscan2.php"
+url_catscan = "https://petscan.wmflabs.org/"
 
 parameters = {'depth' : 10,
               'categories' : category,
@@ -97,7 +97,7 @@ parameters = {'depth' : 10,
 
 r = requests.get(url_catscan, params=parameters)
 articles_json = r.json()
-articles = articles_json["*"][0]["*"]
+articles = articles_json["*"][0]["a"]["*"]
 
 # open a file to write all the output
 output = open("hp_wiki.tsv", "w", encoding="utf-8")
@@ -105,9 +105,12 @@ output.write("\t".join(["title", "user", "timestamp", "size", "anon", "minor", "
 
 # for every article
 for article in articles:
+    # skip this until it's an article
+    if article["namespace"] != 0:
+        continue
 
     # first grab the article's title
-    title = article["a"]["title"]
+    title = article["title"]
     print(title)
 
     # get the list of revisions from our function and then iterate through it,
@@ -120,5 +123,4 @@ for article in articles:
 
 # close the file, we're done here!
 output.close()
-    
-    
+
